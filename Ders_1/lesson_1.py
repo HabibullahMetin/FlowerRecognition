@@ -12,5 +12,5 @@ cv2.imwrite("newseinfeld.jpg",image)
 
 
 
-
+#deneme
 
