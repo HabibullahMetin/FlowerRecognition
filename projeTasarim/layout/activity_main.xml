@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <TextureView
+        android:id="@+id/textureView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"></TextureView>
+
+    <Button
+        android:id="@+id/btnCapture"
+        android:layout_width="90dp"
+        android:layout_height="90dp"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/botton"
+        android:layout_centerHorizontal="true"
+        android:layout_alignBottom="@id/textureView"></Button>
+
+    <Button
+        android:id="@+id/takePicture"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/file"
+        android:layout_marginStart="60dp"
+        android:layout_alignStart="@id/textureView"
+        android:layout_alignBottom="@id/textureView"></Button>
+
+    <Button
+        android:id="@+id/flash"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/flash_on"
+        android:layout_marginEnd="60dp"
+        android:layout_alignEnd="@id/textureView"
+        android:layout_alignBottom="@id/textureView"></Button>
+
+</RelativeLayout>
