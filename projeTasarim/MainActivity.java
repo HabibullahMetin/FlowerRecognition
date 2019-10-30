@@ -1,7 +1,13 @@
 package com.example.projetasarim;
 
 
+import android.annotation.SuppressLint;
+import android.app.PendingIntent;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -36,14 +42,23 @@ import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import com.theartofdev.edmodo.cropper.CropImage;
+import com.theartofdev.edmodo.cropper.CropImageView;
+
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
@@ -62,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
 
     private String cameraId;
     private CameraDevice cameraDevice;
+    private CameraManager manager;
     private CameraCaptureSession cameraCaptureSessions;
     private CaptureRequest.Builder captureRequestBuilder;
     private Size imageDemension;
@@ -69,6 +85,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CAMERA_PERMISSION = 200;
     private Handler mBackgroundHandler;
     private HandlerThread mBackgroundThread;
+    private CaptureRequest.Builder captureBuilder=null;
+    private boolean mFlashMode = false;
 
     CameraDevice.StateCallback stateCallBack = new CameraDevice.StateCallback() {
         @Override
@@ -136,16 +154,23 @@ public class MainActivity extends AppCompatActivity {
                 takePicture();
             }
         });
+
         btnFlashMode.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getApplicationContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
+                if(mFlashMode==false){
+                    btnFlashMode.setBackgroundDrawable(getResources().getDrawable(R.drawable.flash_on));
+                    mFlashMode = true;
+                }else{
+                    btnFlashMode.setBackgroundDrawable(getResources().getDrawable(R.drawable.flash_off));
+                    mFlashMode = false;
+                }
             }
         });
     }
 
     private void openCamera() {
-        CameraManager manager = (CameraManager)getSystemService(Context.CAMERA_SERVICE);
+        manager = (CameraManager)getSystemService(Context.CAMERA_SERVICE);
         try{
             cameraId = manager.getCameraIdList()[0];
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
@@ -171,6 +196,7 @@ public class MainActivity extends AppCompatActivity {
 
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
 
+
         try {
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
             Size[] jpegSizes = null;
@@ -190,14 +216,17 @@ public class MainActivity extends AppCompatActivity {
             outputSurface.add(reader.getSurface());
             outputSurface.add(new Surface(textureView1.getSurfaceTexture()));
 
-            final CaptureRequest.Builder captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+            captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
             captureBuilder.addTarget(reader.getSurface());
-            captureBuilder.set(CaptureRequest.CONTROL_MODE,CameraMetadata.CONTROL_MODE_AUTO);
+            captureBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+            if(mFlashMode==true) {
+                captureBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.CONTROL_AE_MODE_ON_AUTO_FLASH);
+            }
 
             int rotation = getWindowManager().getDefaultDisplay().getRotation();
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION,ORIENTATIONS.get(rotation));
 
-            file = new File(Environment.getExternalStorageDirectory()+"/"+ UUID.randomUUID().toString()+".jpeg");
+            file = new File(Environment.getExternalStorageDirectory()+"/DCIM/Camera/deneme.jpg");
             ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
                 @Override
                 public void onImageAvailable(ImageReader reader) {
@@ -227,6 +256,7 @@ public class MainActivity extends AppCompatActivity {
                 public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
                     super.onCaptureCompleted(session, request, result);
                     Toast.makeText(MainActivity.this,"Kaydedildi"+file,Toast.LENGTH_LONG).show();
+                    imageCropper(file);
                     creatCameraPreview();
                 }
             };
@@ -253,19 +283,56 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
+            CropImage.ActivityResult result = CropImage.getActivityResult(data);
+            Uri resultUri = result.getUri();
+            if (resultCode == RESULT_OK) {
+                Toast.makeText(MainActivity.this,resultUri.toString(),Toast.LENGTH_SHORT).show();
+            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
+                Exception error = result.getError();
+            }
+        }
+    }
+
+    private void saveCroppedImage(Bitmap imageSource) {
+        String root = Environment.getExternalStorageDirectory().toString();
+        File myDir = new File(root + "/saved_images");
+        myDir.mkdirs();
+
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String fname = "Shutta_"+ timeStamp +".jpg";
+
+        File file = new File(myDir, fname);
+        if (file.exists()) file.delete ();
+        try {
+            FileOutputStream out = new FileOutputStream(file);
+            imageSource.compress(Bitmap.CompressFormat.JPEG, 100, out);
+            out.flush();
+            out.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void imageCropper(File file) {
+        CropImage.activity(Uri.fromFile(file)).start(this);
+    }
+
     private void creatCameraPreview() {
         try{
             SurfaceTexture texture = textureView1.getSurfaceTexture();
             assert texture != null;
             texture.setDefaultBufferSize(imageDemension.getWidth(),imageDemension.getHeight());
             Surface surface = new Surface(texture);
-            captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+            captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
             captureRequestBuilder.addTarget(surface);
+
             cameraDevice.createCaptureSession(Arrays.asList(surface),new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(@NonNull CameraCaptureSession session) {
                     if(cameraDevice == null) return;
-
                     cameraCaptureSessions = session;
                     updatePreview();
                 }
@@ -283,8 +350,8 @@ public class MainActivity extends AppCompatActivity {
     private void updatePreview() {
         if(cameraDevice == null)
             Toast.makeText(MainActivity.this,"Hata",Toast.LENGTH_SHORT).show();
+
         captureRequestBuilder.set(CaptureRequest.CONTROL_MODE,CameraMetadata.CONTROL_MODE_AUTO);
-        captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
 
         try{
             cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(),null,mBackgroundHandler);
