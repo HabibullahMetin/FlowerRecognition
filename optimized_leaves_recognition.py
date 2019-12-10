@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """
-Created on Tue Nov 26 13:22:52 2019
+Created on Tue Dec 09 13:52:52 2019
 
-@author: Habibullah
+@author: Yusuf
 """
 
 import os
@@ -17,7 +17,10 @@ import matplotlib.pyplot as plt
 from keras.preprocessing import image
 from tensorflow import lite
 import numpy as np
-
+from google.colab import files
+uploaded = files.upload()
+from google.colab import files
+ 
         
 local_zip = '17flowers.zip'
 zip_ref = zipfile.ZipFile(local_zip,'r')
@@ -45,10 +48,10 @@ for variety in liste :
     except OSError :
         pass
 
-#Örnek 2 klasör görüntüleyelim.
+# Örnek 2 klasör görüntüleyelim.
  
-#print(len(os.listdir("C:/Users/Habibullah/Desktop/Leaves Recognition/flower_photos/training/Acer negundo")))
-#print(len(os.listdir("C:/Users/Habibullah/Desktop/Leaves Recognition/flower_photos/testing/Acer palmatum")))
+# print(len(os.listdir("C:/Users/Habibullah/Desktop/Leaves Recognition/flower_photos/training/Acer negundo")))
+# print(len(os.listdir("C:/Users/Habibullah/Desktop/Leaves Recognition/flower_photos/testing/Acer palmatum")))
  
 def split_data(SOURCE, TRAINING,TESTING,SPLIT_SIZE) :
     files = []
@@ -85,15 +88,25 @@ for name in liste :
     split_data(SOURCE_DIR,TRAINING_DIR,TESTING_DIR,split_size)
 
 TRAINING_DIR = "C:/Users/Yusuf/Desktop/Leaves Recognition/flowers/training/"
-training_datagen = ImageDataGenerator(rescale = 1./255)
+training_datagen = ImageDataGenerator(rescale = 1./255,
+                    rotation_range=45,
+                    width_shift_range=0.2,
+                    height_shift_range=0.2,
+                    horizontal_flip=True,
+                    shear_range=0.2,
+                    zoom_range=0.2,
+                    fill_mode='nearest'
+                    )
 
 training_generator = training_datagen.flow_from_directory(
         TRAINING_DIR,
+        
         target_size = (300,300),
         class_mode = "categorical")
 
 TESTING_DIR = "C:/Users/Yusuf/Desktop/Leaves Recognition/flowers/testing/"
-testing_datagen = ImageDataGenerator(rescale = 1./255)
+testing_datagen = ImageDataGenerator(rescale = 1./255
+                  )
 
 testing_generator = testing_datagen.flow_from_directory(
         TESTING_DIR,
@@ -110,7 +123,9 @@ model = tf.keras.models.Sequential([
         tf.keras.layers.MaxPooling2D(2,2),
         tf.keras.layers.Conv2D(128, (3,3), activation = "relu"),
         tf.keras.layers.MaxPooling2D(2,2),
-        
+        tf.keras.layers.Conv2D(128, (3,3), activation = "relu"),
+        tf.keras.layers.MaxPooling2D(2,2),
+
         tf.keras.layers.Flatten(),
         tf.keras.layers.Dropout(0.5),
         tf.keras.layers.Dense(1024, activation = "relu"),
@@ -121,57 +136,57 @@ model.summary()
 
 model.compile(loss = "categorical_crossentropy", optimizer = RMSprop(lr=0.001), metrics = ['accuracy'])
 
-#model.load_weights("mnist-model.h5")
-#
-#path='C:/Users/Yusuf/Desktop/indir2.jpg'
-#img=image.load_img(path,target_size=(300,300))
-#x=image.img_to_array(img)
-#x=np.expand_dims(x, axis=0)
-#images = np.vstack([x])
-#sonuc = model.predict(images, batch_size=10)
-#print(sonuc[0])
-#print(np.argmax(sonuc))
-#a=np.argmax(sonuc)
-#print(a)
-#if a==0:
+# model.load_weights("mnist-model4.h5")
+
+# path='C:/Users/Yusuf/Desktop/indir.jpg'
+# img=image.load_img(path,target_size=(300,300))
+# x=image.img_to_array(img)
+# x=np.expand_dims(x, axis=0)
+# images = np.vstack([x])
+# sonuc = model.predict(images, batch_size=10)
+# print(sonuc[0])
+# print(np.argmax(sonuc))
+# a=np.argmax(sonuc)
+# print(a)
+# if a==0:
 #    print("it is a bluebell")
-#if a==1:
+# if a==1:
 #    print("it is a buttercup")
-#if a==2:
+# if a==2:
 #    print("it is a calatheas")
-#if a==3:
+# if a==3:
 #    print("it is a coltsfoot")
-#if a==4:
+# if a==4:
 #    print("it is a cowslip")
-#if a==5:
+# if a==5:
 #    print("it is a crocus")
-#if a==6:
+# if a==6:
 #    print("it is a daffodil")
-#if a==7:
+# if a==7:
 #    print("it is a daisy")
-#if a==8:
+# if a==8:
 #    print("it is a dandelion")
-#if a==9:
+# if a==9:
 #    print("it is a dieffenbachia")
-#if a==10:
+# if a==10:
 #    print("it is a fritiallary")
-#if a==11:
+# if a==11:
 #    print("it is a iris")
-#if a==12:
+# if a==12:
 #    print("it is a lilyvalley")
-#if a==13:
+# if a==13:
 #    print("it is a pansy")
-#if a==14:
+# if a==14:
 #    print("it is a snowdrop")
-#if a==15:
+# if a==15:
 #    print("it is a sunflower")
-#if a==16:
+# if a==16:
 #    print("it is a sword")
-#if a==17:
+# if a==17:
 #    print("it is a tigerlily")
-#if a==18:
+# if a==18:
 #    print("it is a tulip")
-#if a==19:
+# if a==19:
 #    print("it is a windflower")    
 
 
@@ -196,25 +211,11 @@ plt.plot(epochs, loss, 'r', "Training Loss")
 plt.plot(epochs, val_loss, 'b', "Validation Loss")
 plt.figure()
 
-keras_file="mnist-model.h5"
+keras_file="mnist-model7.h5"
 model.save(keras_file)
 converter=lite.TocoConverter.from_keras_model_file(keras_file)
 tflite_model=converter.convert()
-open("linear.tflite","wb").write(tflite_model)
+open("linear.tflite7","wb").write(tflite_model)
+files.download('mnist-model7.h5')
+files.download('7linear.tflite')
 
-    
-    
-        
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-     
