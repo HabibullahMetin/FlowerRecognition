@@ -250,7 +250,7 @@ namespace Optimizasyon
                 {
                     for (int j = 0; j < talepMiktar; j++)
                     {
-                        if (atamaMaskesi[j, i] == false) sayacMaske++;
+                        if (atamaMaskesi[i, j] == false) sayacMaske++;
                     }
                 }
                 if (sayacMaske == 0) break;
