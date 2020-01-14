@@ -5,7 +5,7 @@ This repo contains the code to perform a simple image classification task using 
 
 ## Summary of the project
 
-For now the app can determine only 5 flowers.We will update when we find more flowers datasets.
+For now the app can determine only 5 flowers.We will update when we teach more flowers.
 
 
 ## Technologies we used
