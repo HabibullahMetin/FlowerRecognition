@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">WhatThePlant</string>
+    <string name="action_history">Geçmiş</string>
+    <string name="title_activity_history">History</string>
+</resources>
